@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Algorithm Visualizer</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+        <style>
+            .title { grid-column-start: 1; grid-column-end: 6; }
+            .selectionMenu { grid-column-start: 1; grid-column-end: 2; }
+            .algorithmSection { grid-column-start: 2; grid-column-end: 5; }
+            .algorithmInfo {grid-column-start: 5; grid-column-end: 6;}
+
+            .grid-page-layout {
+                display: grid;
+                grid-gap: 5px;
+                background-color: rgb(5, 45, 70);
+                padding: 10px;
+            }
+            .grid-page-layout > div {
+                background-color: rgb(22, 209, 94);
+                text-align: center;
+                padding: 20px 0;
+                font-size: 30px;
+            }
+
+            .visualization-grid {
+                display: grid;
+                grid-template-columns: auto auto auto auto auto auto auto auto auto auto auto auto auto auto auto auto auto auto auto auto auto auto auto auto auto auto auto auto;
+                grid-template-rows: auto auto auto auto auto auto auto auto auto auto auto auto auto auto auto auto auto;
+                /*grid-gap: 3px;*/
+                padding-left: 50px;
+                padding-right: 50px;
+                /*background-color: black;*/
+            }
+
+            .visualization-grid > div {
+                background-color: white;
+                /*text-align: center;*/
+                border: 2px solid black;
+                /*padding: 20px 0;*/
+                width: 32px;
+                height: 32px;
+            }
+        </style>
+    </head>
+
+    <body style="background-color: gray;">
+
+    <div class="grid-page-layout">
+        <div class="title"><h1 style="font-size: 60px;"><u>Algorithm Visualizer</u></h1></div>
+        <div class="selectionMenu">
+            <h3>Select Algorithm</h3>
+            <button type="button" onclick="bfs()" style="width:100px; height:50px;font-size: 20px;">Run BFS</button>
+            <br></br>
+            <button type="button" onclick="dfs()" style="width:100px; height:50px;font-size: 20px;">Run DFS</button>
+            <br></br>
+            <button type="button" onclick="resetGrid()" style="width:100px; height:50px;font-size: 20px;">Reset</button>
+        </div>
+        <div class="algorithmSection">Grid
+            <div id="v-grid" class="visualization-grid">  
+            </div>
+        </div>
+        <div class="algorithmInfo">
+            Info/Stats
+            <p id="numNodesExplored"></p>
+        </div>
+    </div>
+
+    <script>
+        
+        var rows = 17
+        var columns = 28
+        var isStartColored = false;
+        var isEndColored = false;
+        var startingNode = 0;
+        var endingNode = 0;
+
+        const graph = new Array(rows * columns - 1);    
+        let cells =  "";
+        var nodeCount = 1;
+        /*
+        for(let i = 1; i <= rows * columns; ++i) {
+            cells += ("<div onclick=\"colorSquare(this)\">" + i + "</div>");
+            nodes.push(i);
+        }*/
+        for(var i = 1; i <= rows; ++i) {
+            for(var j = 1; j <= columns; ++j) {
+                cells += ("<div id=\"" + nodeCount + "\" onclick=\"colorSquare(this)\"></div>");
+                graph[nodeCount - 1] = [];
+                /*Add the nodes childen to the array*/
+                if(i > 1) {
+                    graph[nodeCount - 1].push(nodeCount - columns);
+                    
+                }
+                if(i < rows) {
+                    graph[nodeCount - 1].push(nodeCount + columns);
+                    
+                }
+                if(j > 1) {
+                    graph[nodeCount - 1].push(nodeCount - 1);
+                }
+                if(j < columns) {
+                    graph[nodeCount - 1].push(nodeCount + 1);
+                }
+
+                ++nodeCount;
+            }
+        }
+
+        document.getElementById("v-grid").innerHTML = cells;
+        
+        console.log(graph[0])
+        console.log(graph[2])
+        console.log(graph[230])
+        console.log(graph[475])
+
+        function colorSquare(square) {
+            if(!isStartColored) {
+                isStartColored = true;
+                square.style.backgroundColor = 'blue';
+                startingNode = parseInt(square.id);
+            } else if(!isEndColored) {
+                isEndColored = true;
+                square.style.backgroundColor = 'red';
+                endingNode = parseInt(square.id);
+            }
+        }
+        /*
+        Using pop makes the array act as a stack(LIFO).
+        Using shift makes the array act as a queue(FIFO).
+        const queue = [1, 2, 3, 4]
+        console.log(queue.toString());
+        queue.push(5);
+        console.log(queue.toString());
+        console.log(queue.shift());
+        console.log(queue.toString());
+        */
+
+        function bfs() {
+            if(startingNode && endingNode) {
+                if(startingNode == endingNode) {
+                    return;
+                }
+                const frontier = [startingNode]; // a queue
+                const explored = [];
+
+                while(frontier.length != 0) {
+                    node = frontier.shift();
+                    explored.push(node);
+                    for(var child of graph[node - 1]) {
+                        if(!explored.includes(child) && !frontier.includes(child)) {
+                            if(child == endingNode) {
+                                explored.push(child);
+                                updateGrid(explored, 1);
+                                return;
+                            }
+                            frontier.push(child);
+                        }
+                    }
+                }
+            }
+        }
+        
+        function dfs() {
+            if(startingNode && endingNode) {
+                if(startingNode == endingNode) {
+                    return;
+                }
+
+                const frontier = [startingNode]; // a stack
+                const explored = [];
+
+                while(frontier.length != 0) {
+                    node = frontier.pop();
+                    explored.push(node);
+                    for(var child of graph[node - 1]) {
+                        if(!explored.includes(child) && !frontier.includes(child)) {
+                            if(child == endingNode) {
+                                explored.push(child);
+                                updateGrid(explored, 1);
+                                return;
+                            }
+                            frontier.push(child);
+                        }
+                    }
+                }
+            }
+        }
+
+        function updateGrid(path, curr) {
+            var time = 50;
+            if(curr >= path.length - 1) {
+                document.getElementById("numNodesExplored").innerHTML = "Nodes Traveled: " + (path.length - 2) + 
+                                                            "<br><br>" + "Total Time: " + (path.length - 2) * time + "ms";
+                return;
+            }
+            setTimeout(function() {
+                document.getElementById(path[curr]).style.backgroundColor = "green";
+                updateGrid(path, ++curr);
+            }, time)
+        }
+
+        function resetGrid() {
+            var count = 1;
+            isStartColored = false;
+            isEndColored = false;
+            startingNode = 0;
+            endingNode = 0;
+            for(var i = 1; i <= rows; ++i) {
+                for(var j = 1; j <= columns; ++j) {
+                    document.getElementById(count).style.backgroundColor = "white";
+                    ++count;
+                }
+            }
+        }
+
+    </script>
+
+    </body>
+</html> 
